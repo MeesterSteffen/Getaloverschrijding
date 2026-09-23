@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Getaloverschrijdingen oefenen</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f3f7fb;
+            color: #1f2937;
+        }
+
+        .container {
+            width: 100%;
+            height: 100vh;
+            padding: 12px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+
+        /* =========================
+           HET GROTE BORD
+        ========================= */
+
+        .bord {
+            background: #243447;
+            border: 8px solid #17212b;
+            border-radius: 22px;
+            padding: 14px 16px 18px;
+
+            width: min(1450px, 100%);
+            flex: 1;
+            min-height: 0;
+
+            display: flex;
+            flex-direction: column;
+
+            box-shadow:
+                0 10px 20px rgba(0,0,0,0.25),
+                inset 0 0 0 3px #40566c;
+        }
+
+
+        /* =========================
+           INVOER
+        ========================= */
+
+        .invoer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+
+            /*
+             * Extra ruimte onder het invoerveld.
+             * Hierdoor staan de getalkaarten
+             * duidelijk lager.
+             */
+            margin-bottom: 28px;
+
+            flex-shrink: 0;
+        }
+
+        #getalInput {
+            width: min(280px, 45vw);
+            padding: 8px 12px;
+
+            font-size: clamp(1.2rem, 2vw, 1.7rem);
+            font-weight: bold;
+            text-align: center;
+
+            border: 3px solid #4472c4;
+            border-radius: 10px;
+
+            outline: none;
+            background: white;
+        }
+
+        #getalInput:focus {
+            border-color: #17365d;
+            box-shadow:
+                0 0 0 3px rgba(68,114,196,0.2);
+        }
+
+        .start-knop {
+            border: none;
+            border-radius: 10px;
+
+            background: #4472c4;
+            color: white;
+
+            font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+            font-weight: bold;
+
+            padding: 9px 20px;
+
+            cursor: pointer;
+
+            box-shadow: 0 4px 0 #2f5597;
+        }
+
+        .start-knop:hover {
+            background: #365f9f;
+        }
+
+        .start-knop:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 #2f5597;
+        }
+
+        .melding {
+            position: absolute;
+            margin-top: 70px;
+
+            font-size: 0.9rem;
+            font-weight: bold;
+
+            color: #ffb3b3;
+        }
+
+
+        /* =========================
+           DE VIJF KAARTEN
+        ========================= */
+
+.kaarten {
+    /*
+     * De kaarten nemen niet meer de volledige
+     * beschikbare hoogte in beslag.
+     */
+    flex: 1;
+    min-height: 0;
+
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+
+    gap: clamp(10px, 1.5vw, 20px);
+
+    width: 100%;
+    max-width: 1380px;
+
+    margin: auto;
+
+    max-height: 680px;
+
+    align-self: center;
+}
+
+        .kolom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+
+            gap: 8px;
+
+            min-width: 0;
+            min-height: 0;
+
+            /*
+             * Zorg ervoor dat iedere kolom
+             * niet extreem lang wordt.
+             */
+            aspect-ratio: 0.78 / 1;
+        }
+
+
+        /* =========================
+           PLAATSWAARDE
+        ========================= */
+
+        .plaatswaarde {
+            color: white;
+
+            font-size: clamp(0.7rem, 1.2vw, 1.1rem);
+            font-weight: bold;
+
+            height: 28px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            white-space: nowrap;
+
+            flex-shrink: 0;
+        }
+
+
+        /* =========================
+           KNOPPEN
+        ========================= */
+
+        .actieknop {
+            width: 100%;
+
+            height: clamp(42px, 6vh, 58px);
+
+            border: none;
+            border-radius: 11px;
+
+            font-size: clamp(1rem, 2vw, 1.7rem);
+            font-weight: bold;
+
+            color: white;
+
+            cursor: pointer;
+
+            flex-shrink: 0;
+
+            transition:
+                transform 0.08s,
+                box-shadow 0.08s,
+                filter 0.15s;
+        }
+
+        .actieknop:hover {
+            filter: brightness(1.08);
+        }
+
+        .actieknop:active {
+            transform: translateY(4px);
+        }
+
+        .actieknop:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            filter: grayscale(0.5);
+        }
+
+
+        /* =========================
+           KLEUREN
+        ========================= */
+
+        .tienduizendtallen {
+            --kleur: #e74c3c;
+            --kleur-donker: #a93226;
+        }
+
+        .duizendtallen {
+            --kleur: #9b59b6;
+            --kleur-donker: #713f87;
+        }
+
+        .honderdtallen {
+            --kleur: #3498db;
+            --kleur-donker: #216d9e;
+        }
+
+        .tientallen {
+            --kleur: #27ae60;
+            --kleur-donker: #187a42;
+        }
+
+        .eenheden {
+            --kleur: #e67e22;
+            --kleur-donker: #b95d0b;
+        }
+
+        .actieknop {
+            background: var(--kleur);
+            box-shadow: 0 4px 0 var(--kleur-donker);
+        }
+
+        .actieknop:active {
+            box-shadow: 0 1px 0 var(--kleur-donker);
+        }
+
+
+        /* =========================
+           FLIPKAART
+        ========================= */
+
+        .flipkaart {
+            width: 100%;
+
+            /*
+             * Vierkantere verhouding.
+             */
+            aspect-ratio: 1 / 1;
+
+            flex: none;
+
+            background: var(--kleur);
+
+            border-radius: 15px;
+
+            position: relative;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: white;
+
+            font-size: clamp(4rem, 8vw, 8rem);
+            font-weight: 900;
+
+            text-shadow:
+                0 4px 0 rgba(0,0,0,0.2);
+
+            box-shadow:
+                0 7px 0 var(--kleur-donker),
+                0 12px 18px rgba(0,0,0,0.25);
+
+            overflow: hidden;
+        }
+
+
+        /* Middenstreep */
+
+        .flipkaart::before {
+            content: "";
+
+            position: absolute;
+
+            left: 0;
+            right: 0;
+
+            top: 50%;
+
+            height: 4px;
+
+            background: rgba(0,0,0,0.22);
+
+            transform: translateY(-50%);
+        }
+
+
+        /* Glans */
+
+        .flipkaart::after {
+            content: "";
+
+            position: absolute;
+
+            left: 7%;
+            right: 7%;
+
+            top: 6px;
+
+            height: 6px;
+
+            border-radius: 10px;
+
+            background: rgba(255,255,255,0.25);
+        }
+
+        .cijfer {
+            position: relative;
+            z-index: 2;
+        }
+
+
+        /* =========================
+           FLIP-ANIMATIE
+        ========================= */
+
+        .verander {
+            animation: flip 0.22s ease-in-out;
+        }
+
+        @keyframes flip {
+
+            0% {
+                transform: rotateX(0deg);
+            }
+
+            50% {
+                transform: rotateX(90deg);
+            }
+
+            100% {
+                transform: rotateX(0deg);
+            }
+
+        }
+
+
+        /* =========================
+           KLEINERE SCHERMEN
+        ========================= */
+
+        @media (max-width: 900px) {
+
+            .container {
+                padding: 8px 10px;
+            }
+
+            .bord {
+                padding: 10px;
+            }
+
+            .invoer {
+                margin-bottom: 20px;
+            }
+
+            .plaatswaarde {
+                font-size: 0.7rem;
+            }
+
+            .actieknop {
+                height: 45px;
+            }
+
+            .kaarten {
+                max-height: 560px;
+            }
+
+        }
+
+
+        @media (max-width: 600px) {
+
+            .invoer {
+                margin-bottom: 15px;
+            }
+
+            .kaarten {
+                gap: 5px;
+            }
+
+            .bord {
+                border-width: 5px;
+            }
+
+            .plaatswaarde {
+                font-size: 0.6rem;
+                height: 22px;
+            }
+
+            .actieknop {
+                height: 38px;
+                font-size: 0.9rem;
+            }
+
+            .flipkaart {
+                border-radius: 9px;
+                font-size: clamp(3rem, 15vw, 5rem);
+            }
+
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="bord">
+
+        <div class="invoer">
+
+            <input
+                id="getalInput"
+                type="number"
+                min="0"
+                max="99999"
+                value="1999"
+                aria-label="Voer een getal van 0 tot en met 99999 in"
+            >
+
+            <button
+                class="start-knop"
+                onclick="startGetal()">
+
+                Start ▶
+
+            </button>
+
+            <div
+                id="melding"
+                class="melding">
+            </div>
+
+        </div>
+
+
+        <div class="kaarten">
+
+
+            <!-- TIENDUIZENDTALLEN -->
+
+            <div class="kolom tienduizendtallen">
+
+                <div class="plaatswaarde">
+                    TIENDUIZENDTALLEN
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(10000)"
+                    id="plus10000">
+                    +10.000
+                </button>
+
+                <div
+                    class="flipkaart"
+                    id="kaartTienduizendtallen">
+
+                    <span
+                        id="tienduizendtallen"
+                        class="cijfer">
+                        0
+                    </span>
+
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(-10000)"
+                    id="min10000">
+                    −10.000
+                </button>
+
+            </div>
+
+
+            <!-- DUIZENDTALLEN -->
+
+            <div class="kolom duizendtallen">
+
+                <div class="plaatswaarde">
+                    DUIZENDTALLEN
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(1000)"
+                    id="plus1000">
+                    +1000
+                </button>
+
+                <div
+                    class="flipkaart"
+                    id="kaartDuizendtallen">
+
+                    <span
+                        id="duizendtallen"
+                        class="cijfer">
+                        1
+                    </span>
+
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(-1000)"
+                    id="min1000">
+                    −1000
+                </button>
+
+            </div>
+
+
+            <!-- HONDERDTALLEN -->
+
+            <div class="kolom honderdtallen">
+
+                <div class="plaatswaarde">
+                    HONDERDTALLEN
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(100)"
+                    id="plus100">
+                    +100
+                </button>
+
+                <div
+                    class="flipkaart"
+                    id="kaartHonderdtallen">
+
+                    <span
+                        id="honderdtallen"
+                        class="cijfer">
+                        9
+                    </span>
+
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(-100)"
+                    id="min100">
+                    −100
+                </button>
+
+            </div>
+
+
+            <!-- TIENTALLEN -->
+
+            <div class="kolom tientallen">
+
+                <div class="plaatswaarde">
+                    TIENTALLEN
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(10)"
+                    id="plus10">
+                    +10
+                </button>
+
+                <div
+                    class="flipkaart"
+                    id="kaartTientallen">
+
+                    <span
+                        id="tientallen"
+                        class="cijfer">
+                        9
+                    </span>
+
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(-10)"
+                    id="min10">
+                    −10
+                </button>
+
+            </div>
+
+
+            <!-- EENHEDEN -->
+
+            <div class="kolom eenheden">
+
+                <div class="plaatswaarde">
+                    EENHEDEN
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(1)"
+                    id="plus1">
+                    +1
+                </button>
+
+                <div
+                    class="flipkaart"
+                    id="kaartEenheden">
+
+                    <span
+                        id="eenheden"
+                        class="cijfer">
+                        9
+                    </span>
+
+                </div>
+
+                <button
+                    class="actieknop"
+                    onclick="veranderGetal(-1)"
+                    id="min1">
+                    −1
+                </button>
+
+            </div>
+
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+    let getal = 1999;
+
+
+    function cijfersVanGetal(waarde) {
+
+        return {
+
+            tienduizendtallen:
+                Math.floor(waarde / 10000) % 10,
+
+            duizendtallen:
+                Math.floor(waarde / 1000) % 10,
+
+            honderdtallen:
+                Math.floor(waarde / 100) % 10,
+
+            tientallen:
+                Math.floor(waarde / 10) % 10,
+
+            eenheden:
+                waarde % 10
+
+        };
+
+    }
+
+
+    function toonGetal() {
+
+        const cijfers =
+            cijfersVanGetal(getal);
+
+        document.getElementById(
+            "tienduizendtallen"
+        ).textContent =
+            cijfers.tienduizendtallen;
+
+        document.getElementById(
+            "duizendtallen"
+        ).textContent =
+            cijfers.duizendtallen;
+
+        document.getElementById(
+            "honderdtallen"
+        ).textContent =
+            cijfers.honderdtallen;
+
+        document.getElementById(
+            "tientallen"
+        ).textContent =
+            cijfers.tientallen;
+
+        document.getElementById(
+            "eenheden"
+        ).textContent =
+            cijfers.eenheden;
+
+        updateKnoppen();
+
+    }
+
+
+    function veranderGetal(stap) {
+
+        const nieuwGetal =
+            getal + stap;
+
+        if (
+            nieuwGetal < 0 ||
+            nieuwGetal > 99999
+        ) {
+            return;
+        }
+
+        const oudeCijfers =
+            cijfersVanGetal(getal);
+
+        getal = nieuwGetal;
+
+        const nieuweCijfers =
+            cijfersVanGetal(getal);
+
+        toonGetal();
+
+        animeerAlsVeranderd(
+            "kaartTienduizendtallen",
+            oudeCijfers.tienduizendtallen,
+            nieuweCijfers.tienduizendtallen
+        );
+
+        animeerAlsVeranderd(
+            "kaartDuizendtallen",
+            oudeCijfers.duizendtallen,
+            nieuweCijfers.duizendtallen
+        );
+
+        animeerAlsVeranderd(
+            "kaartHonderdtallen",
+            oudeCijfers.honderdtallen,
+            nieuweCijfers.honderdtallen
+        );
+
+        animeerAlsVeranderd(
+            "kaartTientallen",
+            oudeCijfers.tientallen,
+            nieuweCijfers.tientallen
+        );
+
+        animeerAlsVeranderd(
+            "kaartEenheden",
+            oudeCijfers.eenheden,
+            nieuweCijfers.eenheden
+        );
+
+    }
+
+
+    function animeerAlsVeranderd(
+        kaartId,
+        oudCijfer,
+        nieuwCijfer
+    ) {
+
+        const kaart =
+            document.getElementById(kaartId);
+
+        kaart.classList.remove("verander");
+
+        if (
+            oudCijfer !== nieuwCijfer
+        ) {
+
+            void kaart.offsetWidth;
+
+            kaart.classList.add("verander");
+
+        }
+
+    }
+
+
+    function startGetal() {
+
+        const invoer =
+            document.getElementById(
+                "getalInput"
+            );
+
+        const melding =
+            document.getElementById(
+                "melding"
+            );
+
+        const nieuwGetal =
+            Number(invoer.value);
+
+        if (
+            !Number.isInteger(nieuwGetal) ||
+            nieuwGetal < 0 ||
+            nieuwGetal > 99999
+        ) {
+
+            melding.textContent =
+                "Kies een getal van 0 t/m 99.999.";
+
+            return;
+
+        }
+
+        melding.textContent = "";
+
+        getal = nieuwGetal;
+
+        toonGetal();
+
+    }
+
+
+    function updateKnoppen() {
+
+        document.getElementById(
+            "plus10000"
+        ).disabled =
+            getal + 10000 > 99999;
+
+        document.getElementById(
+            "min10000"
+        ).disabled =
+            getal - 10000 < 0;
+
+        document.getElementById(
+            "plus1000"
+        ).disabled =
+            getal + 1000 > 99999;
+
+        document.getElementById(
+            "min1000"
+        ).disabled =
+            getal - 1000 < 0;
+
+        document.getElementById(
+            "plus100"
+        ).disabled =
+            getal + 100 > 99999;
+
+        document.getElementById(
+            "min100"
+        ).disabled =
+            getal - 100 < 0;
+
+        document.getElementById(
+            "plus10"
+        ).disabled =
+            getal + 10 > 99999;
+
+        document.getElementById(
+            "min10"
+        ).disabled =
+            getal - 10 < 0;
+
+        document.getElementById(
+            "plus1"
+        ).disabled =
+            getal + 1 > 99999;
+
+        document.getElementById(
+            "min1"
+        ).disabled =
+            getal - 1 < 0;
+
+    }
+
+
+    document.getElementById(
+        "getalInput"
+    ).addEventListener(
+        "keydown",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                startGetal();
+
+            }
+
+        }
+    );
+
+
+    toonGetal();
+
+</script>
+
+</body>
+</html>
